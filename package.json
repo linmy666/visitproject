@@ -1,0 +1,63 @@
+{
+  "name": "mcpify",
+  "version": "0.1.0",
+  "description": "Convert legacy supply chain systems (databases, file drops) into standard MCP servers for AI agents. Built with TypeScript + @modelcontextprotocol/sdk.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "mcpify": "dist/cli/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "tsc --noEmit -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/cli/index.js",
+    "dev": "ts-node src/cli/index.ts",
+    "clean": "rm -rf dist coverage"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "supply-chain",
+    "ai-agent",
+    "database",
+    "etl",
+    "typescript"
+  ],
+  "author": "Lin Ruihan <chuiniu@me.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "better-sqlite3": "^11.3.0",
+    "blessed": "^0.1.81",
+    "chokidar": "^3.6.0",
+    "commander": "^12.1.0",
+    "csv-parse": "^5.5.6",
+    "log-update": "^6.0.0",
+    "mysql2": "^3.11.0",
+    "pg": "^8.13.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/blessed": "^0.1.25",
+    "@types/jest": "^29.5.13",
+    "@types/node": "^22.7.4",
+    "@types/pg": "^8.11.10",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
+  }
+}

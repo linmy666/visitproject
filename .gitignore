@@ -1,0 +1,24 @@
+node_modules/
+dist/
+coverage/
+*.log
+.DS_Store
+.env
+.env.local
+*.swp
+.vscode/
+.idea/
+
+# TypeScript build artefacts that shouldn't be committed.
+# ts-jest emits .js/.d.ts/.map next to .test.ts files; don't commit those.
+/test/**/__snapshots__/
+/test/**/*.js
+/test/**/*.js.map
+/test/**/*.d.ts
+/test/**/*.d.ts.map
+
+# (root-level .d.ts and src/**/*.d.ts are still committed when shippable)
+
+# demo databases created by tests
+*.sqlite
+*.db
