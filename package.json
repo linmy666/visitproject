@@ -1,11 +1,11 @@
 {
-  "name": "mcpify",
+  "name": "visitproject",
   "version": "0.1.0",
-  "description": "Convert legacy supply chain systems (databases, file drops) into standard MCP servers for AI agents. Built with TypeScript + @modelcontextprotocol/sdk.",
+  "description": "Universal MCP adapter for legacy enterprise systems. Convert closed databases and file-drop folders into standard Model Context Protocol servers for AI agents. TypeScript + @modelcontextprotocol/sdk.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "mcpify": "dist/cli/index.js"
+    "visitproject": "dist/cli/index.js"
   },
   "files": [
     "dist",
@@ -30,10 +30,19 @@
     "ai-agent",
     "database",
     "etl",
-    "typescript"
+    "typescript",
+    "visitproject"
   ],
   "author": "Lin Ruihan <chuiniu@me.com>",
   "license": "MIT",
+  "homepage": "https://visitproject.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/linmy666/visitproject.git"
+  },
+  "bugs": {
+    "url": "https://github.com/linmy666/visitproject/issues"
+  },
   "engines": {
     "node": ">=18"
   },

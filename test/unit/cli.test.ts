@@ -20,7 +20,7 @@ describe("CLI scaffold (stage 1)", () => {
   test("main returns 0 with no subcommand (prints help)", () => {
     // No subcommand is allowed; commander prints help and we exit 0.
     const spy = jest.spyOn(process.stdout, "write").mockImplementation(() => true);
-    const code = main(["node", "mcpify"]);
+    const code = main(["node", "visitproject"]);
     spy.mockRestore();
     expect(code).toBe(0);
   });
@@ -33,7 +33,7 @@ describe("CLI scaffold (stage 1)", () => {
     });
     const code = main([
       "node",
-      "mcpify",
+      "visitproject",
       "db",
       "--type",
       "sqlite",
@@ -56,7 +56,7 @@ describe("CLI scaffold (stage 1)", () => {
       out.push(String(s));
       return true;
     });
-    main(["node", "mcpify", "watch", "--dir", "/tmp/drop", "--type", "csv"]);
+    main(["node", "visitproject", "watch", "--dir", "/tmp/drop", "--type", "csv"]);
     spy.mockRestore();
     expect(out.join("")).toContain("dir=/tmp/drop");
     expect(out.join("")).toContain("type=csv");
@@ -68,9 +68,9 @@ describe("CLI scaffold (stage 1)", () => {
       out.push(String(s));
       return true;
     });
-    main(["node", "mcpify", "start", "--config", "./mcpify.json"]);
+    main(["node", "visitproject", "start", "--config", "./visitproject.json"]);
     spy.mockRestore();
-    expect(out.join("")).toContain("config=./mcpify.json");
+    expect(out.join("")).toContain("config=./visitproject.json");
   });
 
   test("--version returns 0 and prints the package version", () => {
@@ -79,7 +79,7 @@ describe("CLI scaffold (stage 1)", () => {
       out.push(String(s));
       return true;
     });
-    const code = main(["node", "mcpify", "--version"]);
+    const code = main(["node", "visitproject", "--version"]);
     spy.mockRestore();
     expect(code).toBe(0);
     expect(out.join("")).toContain("0.1.0");

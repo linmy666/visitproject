@@ -1,27 +1,27 @@
 #!/usr/bin/env node
 /**
- * mcpify CLI entry point.
+ * visitproject CLI entry point.
  *
  * Subcommands (stubs in v0.1.0, real implementations in later stages):
  *
- *   mcpify db --type <mysql|postgres|sqlite> --conn <str> --tables <a,b,c>
+ *   visitproject db --type <mysql|postgres|sqlite> --conn <str> --tables <a,b,c>
  *       Reverse-engineer a database schema and expose each table as a
  *       standard MCP tool. Implemented in stage 2.
  *
- *   mcpify watch --dir <path> --type <csv|xlsx>
+ *   visitproject watch --dir <path> --type <csv|xlsx>
  *       Watch a local drop folder and expose new files as MCP resources.
  *       Implemented in stage 3.
  *
- *   mcpify start --config <path>
+ *   visitproject start --config <path>
  *       Start an MCP server that aggregates all configured sources over the
  *       stdio transport. Implemented in stage 4.
  *
- *   mcpify --version / --help  → standard CLI flags
+ *   visitproject --version / --help  → standard CLI flags
  *
  * Why commander:
  *   - De-facto standard for Node CLIs, zero-config TS types via @types/commander
- *   - Built-in help generation (we get `mcpify db --help` for free)
- *   - Plays nicely with `bin` in package.json so `npm i -g mcpify` works
+ *   - Built-in help generation (we get `visitproject db --help` for free)
+ *   - Plays nicely with `bin` in package.json so `npm i -g visitproject` works
  */
 
 import { Command } from "commander";
@@ -78,9 +78,9 @@ function readPackageJson(): PackageJson {
   } catch {
     // Fallback so the CLI never crashes on package.json lookup
     return {
-      name: "mcpify",
+      name: "visitproject",
       version: "0.0.0-unknown",
-      description: "mcpify CLI",
+      description: "visitproject CLI",
     };
   }
 }
@@ -95,7 +95,7 @@ function buildProgram(): Command {
     .description(pkg.description)
     .showHelpAfterError();
 
-  // --- mcpify db -----------------------------------------------------------
+  // --- visitproject db -----------------------------------------------------------
   program
     .command("db")
     .description(
@@ -128,7 +128,7 @@ function buildProgram(): Command {
       );
     });
 
-  // --- mcpify watch --------------------------------------------------------
+  // --- visitproject watch --------------------------------------------------------
   program
     .command("watch")
     .description(
@@ -152,13 +152,13 @@ function buildProgram(): Command {
       );
     });
 
-  // --- mcpify start ---------------------------------------------------------
+  // --- visitproject start ---------------------------------------------------------
   program
     .command("start")
     .description(
       "Start the MCP server aggregating all configured sources (stage 4)",
     )
-    .option("-c, --config <path>", "Path to a JSON config file", "./mcpify.json")
+    .option("-c, --config <path>", "Path to a JSON config file", "./visitproject.json")
     .action((opts: StartOptions) => {
       // eslint-disable-next-line no-console
       console.log(`[stage 1] start command parsed: config=${opts.config}`);
