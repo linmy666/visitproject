@@ -4,6 +4,10 @@ module.exports = {
   testEnvironment: "node",
   roots: ["<rootDir>/test", "<rootDir>/src"],
   testMatch: ["**/*.test.ts"],
+  // ESM-style ".js" imports must resolve under our CJS module config.
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+  },
   collectCoverageFrom: [
     "src/**/*.ts",
     "!src/**/*.d.ts",

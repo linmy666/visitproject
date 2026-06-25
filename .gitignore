@@ -22,3 +22,5 @@ coverage/
 # demo databases created by tests
 *.sqlite
 *.db
+# but the example DB shipped with the project is fine to commit
+!examples/*.db

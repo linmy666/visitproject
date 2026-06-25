@@ -2,19 +2,19 @@
 /**
  * visitproject CLI entry point.
  *
- * Subcommands (stubs in v0.1.0, real implementations in later stages):
+ * Subcommands:
  *
  *   visitproject db --type <mysql|postgres|sqlite> --conn <str> --tables <a,b,c>
  *       Reverse-engineer a database schema and expose each table as a
- *       standard MCP tool. Implemented in stage 2.
+ *       standard MCP tool. Stage 2 ships SQLite; MySQL/PostgreSQL in 2.5.
  *
  *   visitproject watch --dir <path> --type <csv|xlsx>
  *       Watch a local drop folder and expose new files as MCP resources.
- *       Implemented in stage 3.
+ *       Stage 3.
  *
  *   visitproject start --config <path>
  *       Start an MCP server that aggregates all configured sources over the
- *       stdio transport. Implemented in stage 4.
+ *       stdio transport. Stage 4.
  *
  *   visitproject --version / --help  → standard CLI flags
  *
@@ -27,6 +27,11 @@
 import { Command } from "commander";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import {
+  SqliteAdapter,
+  toolsForAdapter,
+  type DbAdapter,
+} from "../db/index.js";
 
 interface PackageJson {
   name: string;
@@ -115,17 +120,61 @@ function buildProgram(): Command {
       "",
     )
     .option("--print", "Print generated MCP tool schemas as JSON and exit", false)
-    .action((opts: DbOptions) => {
-      // Implemented in stage 2.
-      // For stage 1 we just acknowledge the flags are wired up correctly.
-      // eslint-disable-next-line no-console
-      console.log(
-        `[stage 1] db command parsed: type=${opts.type} conn=${opts.conn} tables=${opts.tables} print=${String(opts.print)}`,
-      );
-      // eslint-disable-next-line no-console
-      console.log(
-        "[stage 1] DB-to-MCP conversion will be implemented in stage 2.",
-      );
+    .action(async (opts: DbOptions) => {
+      // Stage 2: real implementation. Wire DB type → adapter, then
+      // generate MCP tool schemas from table introspection.
+      // Note: we catch errors inside the action and write to stderr
+      // explicitly — commander 12's parseAsync does NOT propagate action
+      // rejections, so a thrown Error becomes an UnhandledPromiseRejection.
+      let adapter;
+      try {
+        adapter = await openAdapter(opts.type, opts.conn);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        process.stderr.write(`[visitproject] ${(e as Error).message}\n`);
+        process.exitCode = 1;
+        return;
+      }
+
+      try {
+        const tools = await toolsForAdapter(adapter);
+        // Apply --tables filter if provided (comma-separated)
+        const requested = opts.tables
+          ? new Set(opts.tables.split(",").map((s) => s.trim()).filter(Boolean))
+          : null;
+        const filtered = requested
+          ? tools.filter((t) => {
+              // tool name: db_select_<table>, db_insert_<table>, etc.
+              const parts = t.name.split("_");
+              // table name = everything after the verb
+              const tableName = parts.slice(2).join("_");
+              return requested.has(tableName);
+            })
+          : tools;
+
+        if (opts.print) {
+          // eslint-disable-next-line no-console
+          console.log(JSON.stringify(filtered, null, 2));
+          return;
+        }
+
+        // Default: human-readable summary
+        // eslint-disable-next-line no-console
+        console.log(
+          `[stage 2] ${filtered.length} MCP tool(s) generated for ${opts.type}://${opts.conn.replace(/^sqlite:/, "")}`,
+        );
+        for (const t of filtered) {
+          // eslint-disable-next-line no-console
+          console.log(`  • ${t.name}  — ${t.description}`);
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        process.stderr.write(`[visitproject] ${(e as Error).message}\n`);
+        process.exitCode = 1;
+        return;
+      } finally {
+        await adapter.close();
+      }
     });
 
   // --- visitproject watch --------------------------------------------------------
@@ -144,11 +193,11 @@ function buildProgram(): Command {
     .action((opts: WatchOptions) => {
       // eslint-disable-next-line no-console
       console.log(
-        `[stage 1] watch command parsed: dir=${opts.dir} type=${opts.type} once=${String(opts.once)}`,
+        `[stage 3 placeholder] watch command parsed: dir=${opts.dir} type=${opts.type} once=${String(opts.once)}`,
       );
       // eslint-disable-next-line no-console
       console.log(
-        "[stage 1] File-watcher pipeline will be implemented in stage 3.",
+        "[stage 3] File-watcher pipeline not yet implemented. See https://github.com/linmy666/visitproject/issues",
       );
     });
 
@@ -161,10 +210,10 @@ function buildProgram(): Command {
     .option("-c, --config <path>", "Path to a JSON config file", "./visitproject.json")
     .action((opts: StartOptions) => {
       // eslint-disable-next-line no-console
-      console.log(`[stage 1] start command parsed: config=${opts.config}`);
+      console.log(`[stage 4 placeholder] start command parsed: config=${opts.config}`);
       // eslint-disable-next-line no-console
       console.log(
-        "[stage 1] The stdio MCP server + TUI gateway will be implemented in stage 4.",
+        "[stage 4] Stdio MCP server + TUI gateway not yet implemented.",
       );
     });
 
@@ -190,6 +239,24 @@ interface StartOptions {
   config?: string;
 }
 
+// --- adapter factory -------------------------------------------------------
+
+/**
+ * Stage 2 only supports sqlite. Stage 2.5 will add mysql + postgres.
+ * We centralise the dispatch so the user-facing flag is the same regardless.
+ */
+async function openAdapter(type: string, conn: string): Promise<DbAdapter> {
+  if (type === "sqlite") {
+    const adapter = new SqliteAdapter(conn);
+    await adapter.open();
+    return adapter;
+  }
+  throw new Error(
+    `Unsupported database type '${type}'. ` +
+      `Stage 2 supports: sqlite. Stage 2.5 will add mysql, postgres.`,
+  );
+}
+
 // --- entry ------------------------------------------------------------------
 
 /**
@@ -200,14 +267,17 @@ interface StartOptions {
  * assertions run. The shebang at the top of the file invokes us via
  * `process.exit(main(process.argv))` in the bottom guard.
  */
-function main(argv: readonly string[]): number {
+async function main(argv: readonly string[]): Promise<number> {
   const program = buildProgram();
   // By default, commander calls process.exit() on errors / --help.
   // We override that so tests can inspect the parsed state. The shebang
   // entry-point at the bottom of this file restores the exit behaviour.
   program.exitOverride();
   try {
-    program.parse(argv as string[]);
+    // parseAsync returns a Promise that resolves after all subcommand
+    // actions (including async ones) have completed. Using the sync
+    // parse() would let async actions throw UnhandledPromiseRejection.
+    await program.parseAsync(argv as string[]);
   } catch (err) {
     // commander throws CommanderError on --help / --version / unknown
     // command. Return 0 for the informational flags, 1 for real errors.
@@ -225,13 +295,16 @@ function main(argv: readonly string[]): number {
     }
     throw err;
   }
-  return 0;
+  // Subcommand actions may have set process.exitCode directly (commander 12
+  // does not propagate action rejections through parseAsync). Honour that.
+  return typeof process.exitCode === "number" ? process.exitCode : 0;
 }
 
 // Run only when invoked directly (allows `import { main } from './cli'` in tests)
 if (require.main === module) {
-  const code = main(process.argv);
-  process.exit(code);
+  main(process.argv).then((code) => {
+    process.exit(code);
+  });
 }
 
 export { buildProgram, main, readPackageJson };
